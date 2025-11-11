@@ -1,0 +1,55 @@
+---
+
+- name: Building process
+  hosts: maven
+  become: yes
+
+  tasks:
+  - name: Ensure maven is present
+    apt:
+     name: maven
+     state: present
+
+  - name: Copy project for further building
+    copy:
+     src: /home/deshaan/boxfuse-sample-java-war-hello
+     dest: /home/deshaan
+
+  - name: Build the project with maven
+    command: mvn package
+    args:
+     chdir: /home/deshaan/boxfuse-sample-java-war-hello
+
+  - name: Copy the artifact for further publishing
+    fetch:
+     src: /home/deshaan/boxfuse-sample-java-war-hello/target/hello-1.0.war
+     dest: /home/deshaan/
+     flat: yes
+
+- name: publish project
+  hosts: tomcat
+  become: yes
+
+  tasks:
+  - name: Ensure tomcat9 package is present
+    apt:
+     name: tomcat9
+     state: present
+
+  - name: Ensure tomcat9 service is active
+    service:
+      name: tomcat9
+      state: started
+
+  - name: Copy .war-file to the tomcat dir
+    copy:
+     src: /home/deshaan/hello-1.0.war
+     dest: /var/lib/tomcat9/webapps
+     owner: tomcat
+     group: tomcat
+     mode: '0644'
+ 
+  - name: WAR deploy
+    service:
+     name: tomcat9
+     state: restarted  
