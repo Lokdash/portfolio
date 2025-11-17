@@ -1,0 +1,19 @@
+services:
+    build-service:
+        image: maven:3.8.4-openjdk-8
+        volumes:
+            - ./boxfuse-sample-java-war-hello:/home
+            - source_volume:/home/target
+        working_dir: /home
+        command: 'mvn package'
+
+    publish-service:
+        image: tomcat:9-jre11
+        volumes:
+            - source_volume:/usr/local/tomcat/webapps
+        ports:
+            - "8083:8080"
+        depends_on:
+            - build-service
+volumes:
+    source_volume:
